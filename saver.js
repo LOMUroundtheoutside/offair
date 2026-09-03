@@ -3,7 +3,7 @@
   const { S, toast } = Offair;
   const $ = s => document.querySelector(s);
   const canvas = $('#saver-canvas'), ctx = canvas.getContext('2d');
-  let on = false, raf = 0, started = 0, clockTimer = 0, driftTimer = 0, style = 'aurora', palette = [{ h: 120, s: 80, l: 55 }], artImg = null, lastInput = Date.now();
+  let barsV = null, on = false, raf = 0, started = 0, clockTimer = 0, driftTimer = 0, style = 'aurora', palette = [{ h: 120, s: 80, l: 55 }], artImg = null, lastInput = Date.now();
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hexToHsl = hex => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return { h: 120, s: 80, l: 55 }; const n = parseInt(m[1], 16); return rgbToHsl((n >> 16) / 255, (n >> 8 & 255) / 255, (n & 255) / 255); };
   function rgbToHsl(r, g, b) { const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min, l = (max + min) / 2; if (!d) return { h: 0, s: 0, l: l * 100 }; const s = d / (1 - Math.abs(2 * l - 1)); let h = max === r ? (g - b) / d % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4; return { h: (h * 60 + 360) % 360, s: s * 100, l: l * 100 }; }
@@ -53,10 +53,10 @@
       ctx.save(); ctx.translate(cx + R * 1.18, cy - R * .62); ctx.rotate(.62 + Math.sin(t * .0004) * .01); ctx.strokeStyle = '#d6d6d6'; ctx.lineWidth = Math.max(4, R * .02); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, R * .82); ctx.stroke(); ctx.fillStyle = '#bdbdbd'; ctx.beginPath(); ctx.arc(0, 0, R * .06, 0, 7); ctx.fill(); ctx.restore();
     },
     bars(t, W, H) {
-      const n = 48, w = W / n; bars.v = bars.v || Array.from({ length: n }, () => Math.random());
+      const n = 48, w = W / n; barsV = barsV || Array.from({ length: n }, () => Math.random());
       for (let i = 0; i < n; i++) {
         const target = .25 + .55 * Math.abs(Math.sin(t * .0011 + i * .37) * Math.sin(t * .0007 + i * .11)) + (Math.random() - .5) * .12;
-        bars.v[i] += (target - bars.v[i]) * .08; const h = bars.v[i] * H * .55;
+        barsV[i] += (target - barsV[i]) * .08; const h = barsV[i] * H * .55;
         const g = ctx.createLinearGradient(0, H - h, 0, H); g.addColorStop(0, col(i % 3, .9, 8)); g.addColorStop(1, col(i % 3, .05)); ctx.fillStyle = g; ctx.fillRect(i * w + w * .18, H - h, w * .64, h);
         ctx.fillStyle = col(i % 3, .9, 20); ctx.fillRect(i * w + w * .18, H - h - 6, w * .64, 3);
       }
@@ -88,7 +88,7 @@
   };
   function frame(t) {
     if (!on) return; const W = canvas.width, H = canvas.height; ctx.clearRect(0, 0, W, H);
-    styles[style](reduced ? 1e6 : t, W, H);
+    try { styles[style](reduced ? 1e6 : t, W, H); } catch (e) { console.error(e); }
     raf = requestAnimationFrame(frame);
   }
   function start() {
