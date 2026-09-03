@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offair</title>
+<meta name="description" content="Radio stations as music-video channels, minus the ads. Watch, play the quiz, or leave it on as a screensaver. Built on FM.video.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23071410'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23c8ff3d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#" id="brand"><span class="mark">OFF<span>AIR</span></span><span class="tag">radio, minus the ads</span></a>
+  <nav class="modes" id="modes">
+    <button data-mode="watch" class="on">Watch</button>
+    <button data-mode="quiz">Quiz</button>
+    <button data-mode="saver">Screensaver</button>
+  </nav>
+  <div class="top-right">
+    <span class="behind" id="behind" title="How far behind the live broadcast you are"></span>
+    <button class="icon" id="btn-filter" title="Family filter: skip songs marked explicit">🛡️</button>
+    <button class="icon" id="btn-rail" title="Stations">📻</button>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <aside class="rail" id="rail">
+    <input id="search" placeholder="Find a station or country…" autocomplete="off">
+    <div class="rail-list" id="stations"></div>
+  </aside>
+
+  <main class="main">
+    <!-- ===== WATCH ===== -->
+    <section class="view" id="view-watch">
+      <div class="video" id="video">
+        <div class="yt-crop"><div id="yt"></div></div>
+        <div class="video-shade"></div>
+        <canvas class="saver-canvas" id="saver-canvas"></canvas>
+        <div class="saver-ui" id="saver-ui">
+          <div class="saver-clock" id="saver-clock">00:00</div>
+          <div class="saver-np"><div class="saver-station" id="saver-station"></div><div class="saver-title" id="saver-title"></div><div class="saver-artist" id="saver-artist"></div></div>
+          <div class="saver-hint">move the mouse or press a key to leave</div>
+        </div>
+        <div class="ident" id="ident" hidden>
+          <img id="ident-logo" alt="">
+          <div><div class="ident-name" id="ident-name"></div><div class="ident-meta" id="ident-meta"></div></div>
+        </div>
+        <div class="video-msg" id="video-msg">Pick a station on the left.</div>
+        <button class="bigplay" id="bigplay" hidden>▶ Start watching</button>
+      </div>
+
+      <div class="nowbar">
+        <img class="art" id="art" alt="" hidden>
+        <div class="np">
+          <div class="np-title" id="np-title">Nothing playing</div>
+          <div class="np-artist" id="np-artist"></div>
+          <div class="np-sub" id="np-sub"></div>
+        </div>
+        <div class="controls">
+          <button id="btn-prev" title="Previous song (←)">⏮</button>
+          <button id="btn-play" title="Play / pause (space)">⏵</button>
+          <button id="btn-next" title="Next song (→)">⏭</button>
+          <button id="btn-live" class="live-btn" title="Jump to the newest song">● Live</button>
+          <input type="range" id="vol" min="0" max="100" value="80" title="Volume">
+        </div>
+      </div>
+
+      <div class="card timeline-card">
+        <div class="card-head"><span>The last four hours on <b id="tl-station">…</b></span><span class="stat" id="tl-stats"></span></div>
+        <div class="timeline" id="timeline"></div>
+        <div class="tl-legend"><i class="k-song"></i>song <i class="k-gap"></i>ads &amp; talk, skipped <i class="k-you"></i>you <i class="k-live"></i>live edge</div>
+      </div>
+
+      <div class="card queue-card">
+        <div class="card-head"><span>Recently on this station</span><span class="stat">tap a song to play it</span></div>
+        <ol class="queue" id="queue"></ol>
+      </div>
+    </section>
+
+    <!-- ===== QUIZ ===== -->
+    <section class="view" id="view-quiz" hidden>
+      <div class="quiz-start" id="quiz-start">
+        <div class="q-hero">
+          <div class="eyebrow">Blind Spot</div>
+          <h1>How well do you know <span id="q-station">this station</span>?</h1>
+          <p>Every question comes from what the station actually played in the last few hours. Three lives. Answer quickly for more points, and streaks multiply.</p>
+          <button class="cta" id="quiz-go">Start a round</button>
+          <div class="q-best">Best here: <b id="q-best">0</b></div>
+        </div>
+        <div class="q-types">
+          <div class="q-type"><b>🔇 Silent video</b><span>The clip plays muted. Type the title or the artist.</span></div>
+          <div class="q-type"><b>🖼️ Out of focus</b><span>The cover art sharpens over ten seconds. Name the artist.</span></div>
+          <div class="q-type"><b>📻 Who's playing it?</b><span>Four stations, one of them is playing this right now.</span></div>
+          <div class="q-type"><b>📈 Higher or lower</b><span>Which video has more views on YouTube?</span></div>
+          <div class="q-type"><b>🕒 Just played</b><span>Which of these four did the station play most recently?</span></div>
+        </div>
+      </div>
+      <div class="quiz-play" id="quiz-play" hidden>
+        <div class="q-hud">
+          <span class="q-lives" id="q-lives"></span>
+          <span class="q-streak" id="q-streak"></span>
+          <span class="q-score" id="q-score">0</span>
+        </div>
+        <div class="q-timer"><i id="q-timer"></i></div>
+        <div class="q-kind" id="q-kind"></div>
+        <div class="q-prompt" id="q-prompt"></div>
+        <div class="q-media" id="q-media"></div>
+        <div class="q-answers" id="q-answers"></div>
+        <div class="q-tools"><button class="ghost" id="q-hint" hidden>Hint (−15)</button><button class="ghost" id="q-skip">Skip (−1 life)</button></div>
+        <div class="q-feedback" id="q-feedback"></div>
+      </div>
+      <div class="quiz-end" id="quiz-end" hidden>
+        <div class="eyebrow">Round over</div>
+        <h1><span id="q-final">0</span> points</h1>
+        <p id="q-summary"></p>
+        <ol class="q-recap" id="q-recap"></ol>
+        <div class="q-end-actions"><button class="cta" id="quiz-again">Play again</button><button class="ghost" id="quiz-back">Back to watching</button></div>
+      </div>
+    </section>
+
+    <!-- ===== SCREENSAVER ===== -->
+    <section class="view" id="view-saver" hidden>
+      <div class="saver-start">
+        <div class="eyebrow">Leave it on</div>
+        <h1>Turn the station into a screensaver.</h1>
+        <p>Full screen video with a live clock, the station ident and slow-moving colour pulled from the station's own brand. Sound stays on unless you mute it. Move the mouse or press a key to come back.</p>
+        <div class="saver-opts">
+          <label>Style
+            <select id="saver-style"><option value="aurora">Aurora</option><option value="grid">Signal grid</option><option value="orbit">Orbit</option></select>
+          </label>
+          <label><input type="checkbox" id="saver-mute"> Mute the video</label>
+          <label><input type="checkbox" id="saver-dim" checked> Dim the video behind the visuals</label>
+        </div>
+        <button class="cta" id="saver-go">Start screensaver</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="foot">Songs, stations and videos come from <a href="https://fm.video" target="_blank" rel="noopener">FM.video</a>. Offair only ever plays the songs a station has played, so ad breaks never reach you: when the station is on an ad, you're a few minutes behind instead.</footer>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="stations.js"></script>
+<script src="app.js"></script>
+<script src="quiz.js"></script>
+<script src="saver.js"></script>
+</body>
+</html>
