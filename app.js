@@ -14,6 +14,7 @@ const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
 const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const fmtViews = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(n);
 const fmtDur = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const DBG = []; function dbg(msg) { DBG.push(new Date().toLocaleTimeString([], { hour12: false }) + ' ' + msg); if (DBG.length > 60) DBG.shift(); const el = $('#debug'); if (el && !el.hidden) el.textContent = DBG.join('\n'); }
 function toast(msg, ms = 1800) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.id); toast.id = setTimeout(() => t.hidden = true, ms); }
 function beep(f = 660, d = .06, g = .05) { try { const ac = beep.ac = beep.ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), v = ac.createGain(); o.type = 'sine'; o.frequency.value = f; v.gain.value = g; o.connect(v); v.connect(ac.destination); o.start(); v.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + d); o.stop(ac.currentTime + d); } catch {} }
 
@@ -104,15 +105,16 @@ function onYouTubeIframeAPIReady() {
     width: '100%', height: '100%',
     playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, cc_load_policy: 0, ...(/^https?:/.test(location.protocol) ? { origin: location.origin } : {}) },
     events: {
-      onReady() { S.ready = true; player.setVolume(S.vol); if (S.muted) player.mute(); if (S.cur) startPlay(S.cur, startPlay.offset || 0); },
+      onReady() { dbg('player ready'); S.ready = true; player.setVolume(S.vol); if (S.muted) player.mute(); if (S.cur) startPlay(S.cur, startPlay.offset || 0); },
       onStateChange(e) {
+        dbg('state ' + ({ '-1': 'unstarted', 0: 'ended', 1: 'playing', 2: 'paused', 3: 'buffering', 5: 'cued' })[e.data] + (S.cur ? ' · ' + S.cur.t : ''));
         if (e.data === YT.PlayerState.ENDED) next();
         if (e.data === YT.PlayerState.CUED) S.errRun = 0;
         if (e.data === YT.PlayerState.PLAYING) { S.errRun = 0; $('#video-msg').hidden = true; $('#bigplay').hidden = true; S.armed = true; $('#btn-play').textContent = '⏸'; mediaSession('playing'); }
         if (e.data === YT.PlayerState.PAUSED) { $('#btn-play').textContent = '⏵'; mediaSession('paused'); }
       },
       onError(e) {
-        if (!S.cur) return; const code = e && e.data; S.badVideos.add(S.cur.y); renderQueue();
+        if (!S.cur) return; const code = e && e.data; dbg('ERROR ' + code + ' · ' + S.cur.t + ' (' + S.cur.y + ')'); S.badVideos.add(S.cur.y); renderQueue();
         /* 101/150 = the owner disabled embedding or it's blocked in your country, 100 = gone: real, skip them. Anything else in a run is YouTube having a moment. */
         S.errRun = (code === 101 || code === 150 || code === 100) ? S.errRun + 1 : S.errRun + 2;
         if (S.errRun >= 8) {
@@ -130,7 +132,7 @@ function startPlay(play, offset = 0) {
   S.cur = play; S.played.add(play.id); startPlay.offset = offset;
   renderNow(); renderTimeline(); renderQueue(); renderBehind();
   if (!S.ready) return;
-  const spec = { videoId: play.y, startSeconds: Math.max(0, Math.floor(offset)) };
+  const spec = { videoId: play.y, startSeconds: Math.max(0, Math.floor(offset)) }; dbg((S.armed ? 'load ' : 'cue ') + play.t + ' (' + play.y + ') @' + spec.startSeconds + 's'); S.loadedAt = Date.now();
   if (S.armed) player.loadVideoById(spec);
   else { player.cueVideoById(spec); $('#bigplay').hidden = false; $('#video-msg').hidden = true; }   /* browsers want a click before sound */
   if (window.Saver) Saver.songChanged(play);
@@ -229,6 +231,13 @@ setInterval(() => {
     /* a 10-minute video for a 3-minute radio edit: move on once we're well past the song's length */
     let st = -1; try { st = player.getPlayerState(); } catch {}
     if (st === YT.PlayerState.PLAYING && pos > S.cur.dur + OVERRUN_S) next();
+    /* stall: armed, asked to play, but YouTube never reports playing or an error (e.g. a "sign in to confirm you're not a bot" wall) */
+    if (S.armed && S.loadedAt && (st === -1 || st === 3) && Date.now() - S.loadedAt > 15000) {
+      dbg('STALL · ' + S.cur.t + ' state ' + st); S.loadedAt = 0; S.badVideos.add(S.cur.y); S.errRun += 2; renderQueue();
+      const m = $('#video-msg'); m.innerHTML = ''; const t = document.createElement('div'); t.innerHTML = `YouTube is not starting this video.<br><small>Skipping to the next song. If this keeps happening, open it on YouTube to see what they say.</small><br>`; const a = document.createElement('a'); a.className = 'ghost msg-link'; a.href = 'https://www.youtube.com/watch?v=' + S.cur.y; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open on YouTube ↗'; t.appendChild(a); m.appendChild(t); m.hidden = false;
+      setTimeout(() => { m.hidden = true; next(); }, 2500);
+    }
+    if (st === YT.PlayerState.PLAYING || st === YT.PlayerState.PAUSED) S.loadedAt = 0;
   }
 }, 1000);
 window.addEventListener('resize', renderTimeline);
@@ -268,6 +277,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { $('#help').hidden = true; $('#rail').classList.remove('open'); return; }
   if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
   if (e.key === '?') { $('#help').hidden = !$('#help').hidden; return; }
+  if (e.key === 'd' || e.key === 'D') { const el = $('#debug'); el.hidden = !el.hidden; el.textContent = DBG.join('\n') || 'nothing logged yet'; return; }
   if (e.key === '/') { e.preventDefault(); $('#search').focus(); return; }
   if (S.mode !== 'watch') return;
   if (e.key === ' ') { e.preventDefault(); $('#btn-play').click(); }
