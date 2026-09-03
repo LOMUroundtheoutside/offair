@@ -78,9 +78,11 @@ async function fetchPlays(id, n = BUFFER) {
 const playable = p => !S.badVideos.has(p.y) && !(S.family && p.x);
 
 /* ---------- choosing what to play (the ad-skipping) ---------- */
+const liveOffset = p => (Date.now() - p.at) / 1000;                       /* seconds since the station started this song */
+const onAir = p => { const e = liveOffset(p); return e >= 0 && e < p.dur - 15; }; /* is the station still inside this song? */
 function pickLive() {
   const list = S.plays.filter(playable); if (!list.length) return null;
-  const n = list[list.length - 1], elapsed = (Date.now() - n.at) / 1000;
+  const n = list[list.length - 1], elapsed = liveOffset(n);
   /* still inside the newest song: join it in progress. Otherwise the station is in a break (or the next
      song hasn't been logged yet) – play the newest song from the top, i.e. go back a tiny bit. */
   return { play: n, offset: elapsed < n.dur - 15 ? elapsed : 0 };
@@ -139,6 +141,13 @@ function startPlay(play, offset = 0) {
 }
 function next() { const n = pickNext(); if (n) startPlay(n.play, n.offset); }
 function prev() { const p = pickPrev(); if (p) startPlay(p.play, p.offset); else toast('Nothing earlier in the log'); }
+async function resync(reason) {
+  if (!S.follow || !S.cur || !S.ready) return;
+  try { await refresh(true); } catch {}
+  const l = pickLive(); if (!l) return;
+  if (l.play.id !== S.cur.id) { startPlay(l.play, l.offset); dbg('resync → newer song (' + reason + ')'); return; }
+  if (onAir(S.cur)) { const want = liveOffset(S.cur); if (Math.abs(want - playerPos()) > 4) { player.seekTo(want, true); dbg(`resync seek ${Math.round(playerPos())}s → ${Math.round(want)}s (${reason})`); } }
+}
 async function goLive() { try { await refresh(true); } catch {} const l = pickLive(); if (l) startPlay(l.play, l.offset); }
 
 /* ---------- station switching & polling ---------- */
@@ -159,10 +168,10 @@ async function refresh(force) {
   if (!force && Date.now() - S.fetchedAt < 15000) return;
   const plays = await fetchPlays(S.station.id); S.plays = plays; S.fetchedAt = Date.now();
   /* follow live: the moment the station logs a song that is on air right now, jump to it at the live position */
-  if (S.follow && S.cur && S.armed) { const l = pickLive(); if (l && l.play.id !== S.cur.id && l.offset > 0 && !S.played.has(l.play.id)) startPlay(l.play, l.offset); }
+  if (S.follow && S.cur && S.armed) { const l = pickLive(); if (l && l.play.id !== S.cur.id && onAir(l.play) && !S.played.has(l.play.id)) { dbg('follow live → ' + l.play.t + ' @' + Math.round(l.offset) + 's'); startPlay(l.play, l.offset); } }
   renderTimeline(); renderQueue(); renderBehind(); renderNext();
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) return; if (S.follow && S.armed) resync('back to the tab'); else refresh().catch(() => {}); });
 function showIdent(st) {
   const el = $('#ident'); $('#ident-logo').src = st.logo; $('#ident-name').textContent = st.name;
   $('#ident-meta').textContent = [st.freq, COUNTRIES[st.cc] && COUNTRIES[st.cc].name, st.genre].filter(Boolean).join(' · ');
@@ -232,7 +241,7 @@ setInterval(() => {
     let st = -1; try { st = player.getPlayerState(); } catch {}
     if (st === YT.PlayerState.PLAYING && pos > S.cur.dur + OVERRUN_S) next();
     /* stall: armed, asked to play, but YouTube never reports playing or an error (e.g. a "sign in to confirm you're not a bot" wall) */
-    if (S.armed && S.loadedAt && (st === -1 || st === 3) && Date.now() - S.loadedAt > 15000) {
+    if (S.armed && S.loadedAt && !document.hidden && (st === -1 || st === 3) && Date.now() - S.loadedAt > 15000) {
       dbg('STALL · ' + S.cur.t + ' state ' + st); S.loadedAt = 0; S.badVideos.add(S.cur.y); S.errRun += 2; renderQueue();
       const m = $('#video-msg'); m.innerHTML = ''; const t = document.createElement('div'); t.innerHTML = `YouTube is not starting this video.<br><small>Skipping to the next song. If this keeps happening, open it on YouTube to see what they say.</small><br>`; const a = document.createElement('a'); a.className = 'ghost msg-link'; a.href = 'https://www.youtube.com/watch?v=' + S.cur.y; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open on YouTube ↗'; t.appendChild(a); m.appendChild(t); m.hidden = false;
       setTimeout(() => { m.hidden = true; next(); }, 2500);
@@ -248,14 +257,14 @@ function mediaSession(state) {
   try {
     navigator.mediaSession.metadata = new MediaMetadata({ title: S.cur.t, artist: S.cur.a, album: S.station ? `${S.station.name} · Offair` : 'Offair', artwork: S.cur.art ? [{ src: S.cur.art, sizes: '300x300', type: 'image/jpeg' }] : [] });
     if (state) navigator.mediaSession.playbackState = state;
-    navigator.mediaSession.setActionHandler('play', () => player.playVideo()); navigator.mediaSession.setActionHandler('pause', () => player.pauseVideo());
+    navigator.mediaSession.setActionHandler('play', () => { player.playVideo(); if (S.follow) resync('media key'); }); navigator.mediaSession.setActionHandler('pause', () => player.pauseVideo());
     navigator.mediaSession.setActionHandler('previoustrack', prev); navigator.mediaSession.setActionHandler('nexttrack', next);
   } catch {}
 }
 
 /* ---------- controls ---------- */
-$('#bigplay').onclick = () => { S.armed = true; $('#bigplay').hidden = true; try { if (!S.muted) player.unMute(); player.playVideo(); } catch {} };
-$('#btn-play').onclick = () => { if (!S.ready || !S.cur) return; if (!S.armed) { $('#bigplay').click(); return; } const st = player.getPlayerState(); if (st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo(); };
+$('#bigplay').onclick = () => { S.armed = true; $('#bigplay').hidden = true; try { if (!S.muted) player.unMute(); player.playVideo(); } catch {} if (S.follow) setTimeout(() => resync('start'), 800); };
+$('#btn-play').onclick = () => { if (!S.ready || !S.cur) return; if (!S.armed) { $('#bigplay').click(); return; } const st = player.getPlayerState(); if (st === YT.PlayerState.PLAYING) player.pauseVideo(); else { player.playVideo(); if (S.follow) resync('resume'); } };
 $('#btn-next').onclick = next; $('#btn-prev').onclick = prev;
 $('#btn-live').onclick = () => { S.follow = !S.follow; save(); renderBehind(); if (S.follow) { toast('Following live'); goLive(); } else toast('Not following live – you stay where you are'); };
 function nudge(sec) { if (!S.ready || !S.cur) return; const pos = Math.max(0, playerPos() + sec); player.seekTo(pos, true); toast(`${sec < 0 ? '⟲' : '⟳'} ${Math.abs(sec)}s`); renderBehind(); }
