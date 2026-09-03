@@ -296,6 +296,8 @@ body.fs .video { border-radius: 0; border: 0; }
 body.fs .fs-bar { display: flex; }
 body.fs .video.idle .fs-bar { opacity: 0; pointer-events: none; }
 body.fs .video.idle { cursor: none; }
+/* in fullscreen the strip owns every control, so the YouTube frame must not swallow mouse movement (it would never wake the strip) */
+body.fs .yt-crop iframe, body.fs .yt-crop #yt { pointer-events: none; }
 .fs-bar button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: inherit; font-size: 18px; }
 .fs-bar button:hover { border-color: var(--muted); }
 .fs-bar .nudge, .fs-bar .exit { width: auto; padding: 0 12px; font-family: var(--mono); font-size: 13px; }
