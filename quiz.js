@@ -77,7 +77,7 @@
     const pool = uniqSongs(); if (pool.length < 6) { toast('This station needs a few more songs in its log – try another'); return; }
     if (S.ready && Offair.player) { try { Offair.player.pauseVideo(); } catch {} }
     $('#quiz-start').hidden = true; $('#quiz-end').hidden = true; $('#quiz-play').hidden = false;
-    round = { n: 0, score: 0, lives: LIVES, streak: 0, recap: [], q: null, done: false, skipFree: false };
+    round = { n: 0, score: 0, lives: LIVES, streak: 0, recap: [], q: null, done: false, skipFree: false }; hud();
     /* three other stations for "who's playing it", same country first */
     const cc = S.station.cc, pick = shuffle(STATIONS.filter(s => s.id !== S.station.id && s.cc === cc)).slice(0, 3);
     while (pick.length < 3) pick.push(shuffle(STATIONS.filter(s => s.id !== S.station.id && !pick.includes(s)))[0]);
