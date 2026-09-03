@@ -12,30 +12,49 @@ songs, so an ad break can never reach you: when the station goes to ads, Offair
 simply keeps playing from a few minutes behind (the song that just aired, from
 the top) and catches up when the next song is logged. The timeline under the
 video shows the last four hours as blocks (songs) and gaps (ads and talk), with
-a "you" marker sitting a little behind the live edge.
+a "you" marker sitting a little behind the live edge and a count of breaks
+skipped.
 
 ## Modes
 
-* **Watch** – pick a station (224 across 17 countries, grouped by country, with
-  favourites and search). Controls: play/pause, previous, next, jump to live,
-  volume; keyboard `space` `←` `→` `L` `M` `F` `S`. The 🛡️ family filter skips
-  songs FM.video marks explicit (on by default).
-* **Quiz ("Blind Spot")** – ten questions built from what the station played in
-  the last few hours, three lives, streak multiplier, speed bonus:
-  silent video (type title or artist, hint costs 15), out-of-focus cover art
-  that sharpens over ten seconds, "who's playing it" (four real stations, one
-  of them played this last), higher-or-lower YouTube views, and "which did the
-  station play most recently". Best score per station is kept in the browser.
-* **Screensaver** – fullscreen video with a live clock, the station ident and a
-  slow generative canvas in the station's own brand hue (Aurora, Signal grid or
-  Orbit). Move the mouse or press a key to come back.
+**Watch.** 224 stations across 17 countries, grouped by country with the
+country you're in first (from FM.video's geo endpoint), favourites, and search
+(`/`). A start panel suggests stations near you or your favourites. Controls:
+play/pause, previous, next, jump to live, mute, volume; keyboard `space` `←`
+`→` `L` `M` `F` `S` `↑` `↓` and `?` for the shortcut list. The 🛡️ family
+filter skips songs FM.video marks explicit (on by default). Shows what's up
+next, integrates with the OS media keys, cuts videos that run long past the
+radio edit, marks videos YouTube refuses to embed, and backs off for 30 s if
+YouTube fails four videos in a row instead of skipping through the whole log.
+
+**Quiz ("Blind Spot").** Ten questions built from what the station played in
+the last few hours, three lives, speed bonus, streak multiplier, hints that
+cost points, a double-points final, sound effects. Nine question types: silent
+video (type title or artist), out-of-focus cover art that sharpens over ten
+seconds, who's playing it (four real stations), higher-or-lower YouTube views,
+just played (most recent of four), odd one out (three from this station, one
+from another), match the cover (four artworks), on the dial (which station is
+on that frequency), and longer song. Best score per station is kept in the
+browser; scores can be posted with a name to a per-station top-10 that
+everyone sees (a public MQTT relay holds one retained document per player per
+station), and results copy as a shareable emoji grid.
+
+**Screensaver.** Fullscreen video with a live clock and date, the station
+ident, up-next, and a slow canvas animation coloured from the album art of
+whatever is playing (the artwork is served with CORS, so it's sampled on a tiny
+canvas). Six styles: Aurora, Vinyl (a spinning record with the cover as its
+label and a tonearm), Bars, Waves, Signal grid, Orbit. Text drifts slowly to
+avoid burn-in. Optionally starts by itself after 2, 5 or 10 idle minutes while
+watching. Move the mouse or press a key to come back.
 
 ## How it talks to FM.video
 
 * `https://api.fm.video/api/PlayedSongs/<stationId>/<n>` – the last *n* songs a
   station played (title, artist, YouTube id, duration, artwork, view count,
   explicit flag). CORS is open, so the browser calls it directly. Offair fetches
-  40 and re-polls every 45 seconds.
+  40 and re-polls every 45 seconds, and again when the tab becomes visible.
+* `https://api.fm.video/api/geo` – the visitor's country, used to order the
+  station list.
 * Station list (`stations.js`) – id, name, slug, country, frequency, genre,
   brand colour and logo, taken from FM.video's home page data.
 * Videos play through the YouTube IFrame API. The iframe is scaled inside a
@@ -45,12 +64,22 @@ a "you" marker sitting a little behind the live edge.
 
 | File | What it is |
 |------|------------|
-| `index.html` | The three views, the player, the timeline and queue |
+| `index.html` | The three views, the player, the timeline and queue, help overlay |
 | `style.css` | Look and feel: Syne + Instrument Sans + JetBrains Mono, green-black studio palette |
-| `app.js` | Station rail, data fetching, the ad-skipping play logic, timeline, controls |
-| `quiz.js` | Question builders, round flow, fuzzy answer matching |
-| `saver.js` | Screensaver: fullscreen, clock, three canvas styles |
+| `app.js` | Station rail, start panel, data fetching, the ad-skipping play logic, timeline, controls, media session |
+| `quiz.js` | Question builders, round flow, fuzzy answer matching, scoreboard over the relay |
+| `saver.js` | Screensaver: fullscreen, clock, palette from artwork, six canvas styles, idle auto-start |
 | `stations.js` | `STATIONS` and `COUNTRIES` |
 
-Run it by opening `index.html`, or push to GitHub Pages. Nothing is copied
-from FM.video except the station list; songs are fetched live.
+Run it by opening `index.html` (YouTube needs a real web origin for the video,
+so use a local server, e.g. `python3 -m http.server`), or push to GitHub
+Pages. Nothing is copied from FM.video except the station list; songs are
+fetched live.
+
+## Testing notes
+
+Headless Chromium gets throttled by YouTube after a while ("This video is
+unavailable", error 150, on videos that embed fine elsewhere), so verify video
+playback in a real browser. Everything else (data, timeline, quiz questions,
+scoreboard, screensaver canvas) can be exercised headlessly from a local
+server.

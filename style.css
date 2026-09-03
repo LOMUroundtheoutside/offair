@@ -116,6 +116,8 @@ h1, .mark, .cta, .np-title, .q-score, .saver-title, .ident-name { font-family: v
 .queue .q-t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .queue .q-a { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .queue .x { color: var(--coral); font-size: 10px; margin-left: 6px; }
+.queue .x.bad { color: var(--muted); }
+.queue li.bad { opacity: .4; }
 
 /* ---- quiz ---- */
 .quiz-start { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 24px; align-items: start; }
@@ -210,3 +212,47 @@ body.saver.settled .saver-hint { opacity: 0; }
   .q-answers { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .ident { animation: none; } .q-timer i { transition: none; } }
+
+/* ---- start panel (before a station is chosen) ---- */
+.start { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 30% 20%, rgba(200,255,61,.10), transparent 55%), var(--bg2); padding: 24px; }
+.start-inner { max-width: 640px; width: 100%; }
+.start h2 { font-family: var(--display); font-weight: 800; font-size: clamp(22px, 3vw, 32px); margin: 0 0 14px; }
+.start-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.start-st { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; text-align: left; font-weight: 600; box-shadow: inset 4px 0 0 var(--c); }
+.start-st:hover { border-color: var(--muted); background: var(--panel2); }
+.start-logo { width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: #fff; flex: none; }
+.start-logo.fallback { display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 11px; color: #071410; }
+.start-hint { color: var(--muted); font-size: 13px; margin: 14px 0 0; }
+.np-next { color: var(--muted); font-size: 12px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-next::before { content: '⏭ '; }
+
+/* ---- help ---- */
+.help { position: fixed; inset: 0; z-index: 70; background: rgba(7,20,16,.7); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+.help-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; width: min(560px, 100%); }
+.help table { width: 100%; border-collapse: collapse; }
+.help td { padding: 6px 4px; color: #c9d8d0; }
+.help td:nth-child(odd) { width: 90px; }
+kbd { font-family: var(--mono); font-size: 12px; background: var(--panel2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; }
+
+/* ---- quiz scoreboard, share ---- */
+.q-board { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.q-board ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.q-board li { display: grid; grid-template-columns: 24px 1fr auto; gap: 8px; font-size: 14px; padding: 4px 6px; border-radius: 6px; }
+.q-board li.me { background: rgba(200,255,61,.1); }
+.q-board li span:first-child { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.q-board li b { font-family: var(--mono); color: var(--amber); }
+.q-board .empty { color: var(--muted); font-size: 13px; }
+.q-save { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+.q-save label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.q-save input { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; outline: none; }
+.q-save input:focus { border-color: var(--coral); }
+.q-rank { color: var(--amber); font-weight: 600; min-height: 22px; margin: 0 0 12px; }
+.q-answers .ans.cover { flex-direction: column; padding: 8px; }
+.q-answers .ans.cover img { width: 100%; height: auto; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--panel2); }
+.q-kind.final { color: var(--amber); }
+.q-hud .q-mult { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+
+/* ---- screensaver extras ---- */
+.saver-date { position: absolute; right: 5vw; top: calc(6vh + clamp(48px, 9vw, 140px) * 1.05); font-family: var(--mono); font-size: clamp(12px, 1.4vw, 18px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+.saver-next { margin-top: 14px; font-family: var(--mono); font-size: clamp(11px, 1.1vw, 14px); color: rgba(255,255,255,.55); letter-spacing: .08em; }
+.saver-ui > * { transition: transform 30s linear; }

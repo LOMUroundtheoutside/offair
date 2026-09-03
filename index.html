@@ -22,6 +22,7 @@
   <div class="top-right">
     <span class="behind" id="behind" title="How far behind the live broadcast you are"></span>
     <button class="icon" id="btn-filter" title="Family filter: skip songs marked explicit">🛡️</button>
+    <button class="icon" id="btn-help" title="Keyboard shortcuts (?)">?</button>
     <button class="icon" id="btn-rail" title="Stations">📻</button>
   </div>
 </header>
@@ -41,14 +42,23 @@
         <canvas class="saver-canvas" id="saver-canvas"></canvas>
         <div class="saver-ui" id="saver-ui">
           <div class="saver-clock" id="saver-clock">00:00</div>
-          <div class="saver-np"><div class="saver-station" id="saver-station"></div><div class="saver-title" id="saver-title"></div><div class="saver-artist" id="saver-artist"></div></div>
+          <div class="saver-date" id="saver-date"></div>
+          <div class="saver-np"><div class="saver-station" id="saver-station"></div><div class="saver-title" id="saver-title"></div><div class="saver-artist" id="saver-artist"></div><div class="saver-next" id="saver-next"></div></div>
           <div class="saver-hint">move the mouse or press a key to leave</div>
         </div>
         <div class="ident" id="ident" hidden>
           <img id="ident-logo" alt="">
           <div><div class="ident-name" id="ident-name"></div><div class="ident-meta" id="ident-meta"></div></div>
         </div>
-        <div class="video-msg" id="video-msg">Pick a station on the left.</div>
+        <div class="start" id="start">
+          <div class="start-inner">
+            <div class="eyebrow">Radio, minus the ads</div>
+            <h2 id="start-label">Start with one of these</h2>
+            <div class="start-grid" id="start-grid"></div>
+            <p class="start-hint">Or pick any of 224 stations from the list. Ads never reach you: Offair only plays the songs a station has played, and simply runs a few minutes behind when the station is on a break.</p>
+          </div>
+        </div>
+        <div class="video-msg" id="video-msg" hidden>Pick a station on the left.</div>
         <button class="bigplay" id="bigplay" hidden>▶ Start watching</button>
       </div>
 
@@ -58,13 +68,15 @@
           <div class="np-title" id="np-title">Nothing playing</div>
           <div class="np-artist" id="np-artist"></div>
           <div class="np-sub" id="np-sub"></div>
+          <div class="np-next" id="np-next" hidden></div>
         </div>
         <div class="controls">
           <button id="btn-prev" title="Previous song (←)">⏮</button>
           <button id="btn-play" title="Play / pause (space)">⏵</button>
           <button id="btn-next" title="Next song (→)">⏭</button>
           <button id="btn-live" class="live-btn" title="Jump to the newest song">● Live</button>
-          <input type="range" id="vol" min="0" max="100" value="80" title="Volume">
+          <button id="btn-mute" title="Mute (M)">🔊</button>
+          <input type="range" id="vol" min="0" max="100" value="80" title="Volume (↑ ↓)">
         </div>
       </div>
 
@@ -96,6 +108,14 @@
           <div class="q-type"><b>📻 Who's playing it?</b><span>Four stations, one of them is playing this right now.</span></div>
           <div class="q-type"><b>📈 Higher or lower</b><span>Which video has more views on YouTube?</span></div>
           <div class="q-type"><b>🕒 Just played</b><span>Which of these four did the station play most recently?</span></div>
+          <div class="q-type"><b>🎯 Odd one out</b><span>Three were played here today. One wasn't.</span></div>
+          <div class="q-type"><b>🧩 Match the cover</b><span>Four covers, one song. Pick the right art.</span></div>
+          <div class="q-type"><b>📡 On the dial</b><span>Which station lives on that frequency?</span></div>
+          <div class="q-type"><b>⏱️ Longer song</b><span>Which of the two runs longer?</span></div>
+          <div class="q-board">
+            <div class="card-head"><span>Top scores on <b id="q-board-station">…</b></span><span class="stat" id="q-board-status"></span></div>
+            <ol id="q-board"></ol>
+          </div>
         </div>
       </div>
       <div class="quiz-play" id="quiz-play" hidden>
@@ -117,6 +137,12 @@
         <h1><span id="q-final">0</span> points</h1>
         <p id="q-summary"></p>
         <ol class="q-recap" id="q-recap"></ol>
+        <div class="q-save">
+          <label>Your name for the scoreboard <input id="q-name" maxlength="16" placeholder="e.g. Theo" autocomplete="off"></label>
+          <button class="ghost" id="q-post">Post score</button>
+          <button class="ghost" id="q-share">Copy result</button>
+        </div>
+        <p class="q-rank" id="q-rank"></p>
         <div class="q-end-actions"><button class="cta" id="quiz-again">Play again</button><button class="ghost" id="quiz-back">Back to watching</button></div>
       </div>
     </section>
@@ -126,11 +152,14 @@
       <div class="saver-start">
         <div class="eyebrow">Leave it on</div>
         <h1>Turn the station into a screensaver.</h1>
-        <p>Full screen video with a live clock, the station ident and slow-moving colour pulled from the station's own brand. Sound stays on unless you mute it. Move the mouse or press a key to come back.</p>
+        <p>Full screen video with a live clock, the station ident and slow-moving visuals coloured from the album art of whatever is playing. Sound stays on unless you mute it. Move the mouse or press a key to come back.</p>
         <div class="saver-opts">
           <label>Style
-            <select id="saver-style"><option value="aurora">Aurora</option><option value="grid">Signal grid</option><option value="orbit">Orbit</option></select>
+            <select id="saver-style"><option value="aurora">Aurora</option><option value="vinyl">Vinyl</option><option value="bars">Bars</option><option value="waves">Waves</option><option value="grid">Signal grid</option><option value="orbit">Orbit</option></select>
           </label>
+          <label>Start by itself after
+            <select id="saver-idle"><option value="0">never</option><option value="120">2 minutes</option><option value="300">5 minutes</option><option value="600">10 minutes</option></select>
+            of nobody touching anything (while watching)</label>
           <label><input type="checkbox" id="saver-mute"> Mute the video</label>
           <label><input type="checkbox" id="saver-dim" checked> Dim the video behind the visuals</label>
         </div>
@@ -141,9 +170,21 @@
 </div>
 
 <footer class="foot">Songs, stations and videos come from <a href="https://fm.video" target="_blank" rel="noopener">FM.video</a>. Offair only ever plays the songs a station has played, so ad breaks never reach you: when the station is on an ad, you're a few minutes behind instead.</footer>
+<div class="help" id="help" hidden>
+  <div class="help-card">
+    <div class="card-head"><span>Keyboard</span><span class="stat">press ? or Esc to close</span></div>
+    <table>
+      <tr><td><kbd>space</kbd></td><td>play / pause</td><td><kbd>←</kbd> <kbd>→</kbd></td><td>previous / next song</td></tr>
+      <tr><td><kbd>L</kbd></td><td>jump to live</td><td><kbd>M</kbd></td><td>mute</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>volume</td><td><kbd>F</kbd></td><td>fullscreen video</td></tr>
+      <tr><td><kbd>S</kbd></td><td>screensaver</td><td><kbd>/</kbd></td><td>search stations</td></tr>
+    </table>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js"></script>
 <script src="stations.js"></script>
 <script src="app.js"></script>
 <script src="quiz.js"></script>
