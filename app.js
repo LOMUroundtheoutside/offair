@@ -111,13 +111,15 @@ function onYouTubeIframeAPIReady() {
         if (e.data === YT.PlayerState.PLAYING) { S.errRun = 0; $('#video-msg').hidden = true; $('#bigplay').hidden = true; S.armed = true; $('#btn-play').textContent = '⏸'; mediaSession('playing'); }
         if (e.data === YT.PlayerState.PAUSED) { $('#btn-play').textContent = '⏵'; mediaSession('paused'); }
       },
-      onError() {
-        if (!S.cur) return; S.badVideos.add(S.cur.y); S.errRun++; renderQueue();
-        if (S.errRun >= 4) { /* four in a row is YouTube having a moment, not four bad videos: back off instead of eating the whole log */
-          $('#video-msg').innerHTML = 'YouTube is not serving videos right now.<br><small>Retrying in 30 seconds.</small>'; $('#video-msg').hidden = false;
-          S.errRun = 0; S.badVideos.clear(); setTimeout(() => { if (S.cur) startPlay(S.cur, 0); }, 30000); return;
+      onError(e) {
+        if (!S.cur) return; const code = e && e.data; S.badVideos.add(S.cur.y); renderQueue();
+        /* 101/150 = the owner disabled embedding or it's blocked in your country, 100 = gone: real, skip them. Anything else in a run is YouTube having a moment. */
+        S.errRun = (code === 101 || code === 150 || code === 100) ? S.errRun + 1 : S.errRun + 2;
+        if (S.errRun >= 8) {
+          $('#video-msg').innerHTML = 'YouTube keeps refusing videos for this station.<br><small>Waiting 30 seconds, then trying the next song.</small>'; $('#video-msg').hidden = false;
+          S.errRun = 0; setTimeout(() => { $('#video-msg').hidden = true; next(); }, 30000); return;
         }
-        toast('That video will not play here – skipping'); setTimeout(next, 600);
+        toast(`“${S.cur.t}” won’t embed (YouTube error ${code}) – skipping`, 2500); setTimeout(next, 500);
       },
     },
   });
