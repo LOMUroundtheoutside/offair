@@ -322,3 +322,5 @@ $('#brand').onclick = e => { e.preventDefault(); setMode('watch'); };
 renderRail(); renderStart(); detectCountry();
 window.Offair = { S, byId, fetchPlays, startPlay, setMode, toast, beep, fmtViews, fmtTime, fmtDur, stationLogo, playerPos, save, get player() { return player; } };
 { const last = S.last && byId[S.last]; if (last) selectStation(last); }
+/* ?mode=quiz or ?mode=saver opens straight into that view (used by the Omarchy bar widget) */
+{ const m = new URLSearchParams(location.search).get('mode'); if (m === 'quiz' || m === 'saver') setMode(m); }
