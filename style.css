@@ -75,7 +75,7 @@ h1, .mark, .cta, .np-title, .q-score, .saver-title, .ident-name { font-family: v
 .ident-meta { color: var(--muted); font-size: 12px; }
 
 /* ---- now bar ---- */
-.nowbar { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.nowbar { display: grid; grid-template-columns: 64px minmax(160px, 1fr) fit-content(62%); gap: 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
 .art { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--panel2); }
 .art.empty { visibility: hidden; }
 .tl-empty, .q-empty { color: var(--muted); font-size: 13px; padding: 16px 12px; display: block; }
@@ -358,9 +358,9 @@ body.stream .video.st-broadcast .fs-bar { bottom: 20vh; }
 
 /* ---- lyrics bubbles ---- */
 .video { container-type: inline-size; }
-.lyric { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); max-width: 82%; padding: .55em 1em; border-radius: 1.4em; z-index: 6; pointer-events: none;
+.lyric { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); max-width: 86%; padding: .55em 1em; border-radius: 1.4em; z-index: 6; pointer-events: none;
   background: rgba(7,20,16,.72); border: 1px solid rgba(200,255,61,.28); backdrop-filter: blur(10px); box-shadow: 0 12px 40px rgba(0,0,0,.45), 0 0 0 4px rgba(200,255,61,.06);
-  font-family: var(--display); font-weight: 800; font-size: clamp(15px, 3.4cqw, 46px); line-height: 1.15; color: #fff; text-align: center; text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
+  font-family: var(--display); font-weight: 800; font-size: clamp(14px, 2.7cqw, 38px); line-height: 1.15; color: #fff; text-align: center; text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
 .lyric::after { content: ''; position: absolute; left: 14%; bottom: -10px; width: 14px; height: 14px; border-radius: 50%; background: rgba(7,20,16,.72); border: 1px solid rgba(200,255,61,.28); }
 .lyric.in { animation: bubblein .55s cubic-bezier(.2,1.4,.4,1) both; }
 .lyric.in .lyric-text { display: inline-block; animation: bob 3.2s ease-in-out .55s infinite; }
