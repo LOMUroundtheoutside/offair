@@ -74,7 +74,10 @@
           <button id="btn-prev" title="Previous song (←)">⏮</button>
           <button id="btn-play" title="Play / pause (space)">⏵</button>
           <button id="btn-next" title="Next song (→)">⏭</button>
-          <button id="btn-live" class="live-btn" title="Jump to the newest song">● Live</button>
+          <button id="btn-back" title="Back a few seconds (Shift+←)">⟲</button>
+          <button id="btn-fwd" title="Forward a few seconds (Shift+→)">⟳</button>
+          <select id="step" title="How far ⟲ and ⟳ jump"><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
+          <button id="btn-live" class="live-btn" title="Follow live: jump to whatever the station is playing the moment it's logged">● Live</button>
           <button id="btn-mute" title="Mute (M)">🔊</button>
           <input type="range" id="vol" min="0" max="100" value="80" title="Volume (↑ ↓)">
         </div>
@@ -175,9 +178,10 @@
     <div class="card-head"><span>Keyboard</span><span class="stat">press ? or Esc to close</span></div>
     <table>
       <tr><td><kbd>space</kbd></td><td>play / pause</td><td><kbd>←</kbd> <kbd>→</kbd></td><td>previous / next song</td></tr>
-      <tr><td><kbd>L</kbd></td><td>jump to live</td><td><kbd>M</kbd></td><td>mute</td></tr>
+      <tr><td><kbd>P</kbd></td><td>previous / next song: <kbd>←</kbd> <kbd>→</kbd></td><td><kbd>M</kbd></td><td>mute</td></tr>
       <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>volume</td><td><kbd>F</kbd></td><td>fullscreen video</td></tr>
       <tr><td><kbd>S</kbd></td><td>screensaver</td><td><kbd>/</kbd></td><td>search stations</td></tr>
+      <tr><td><kbd>⇧←</kbd> <kbd>⇧→</kbd></td><td>back / forward a few seconds</td><td><kbd>L</kbd></td><td>follow live on / off</td></tr>
     </table>
   </div>
 </div>

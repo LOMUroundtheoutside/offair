@@ -7,9 +7,9 @@ const BUFFER = 40;                    /* songs to fetch = roughly the last four 
 const POLL_MS = 45000, WINDOW_MS = 4 * 3600e3, BREAK_MIN = 3.5, OVERRUN_S = 25;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 
-const S = { station: null, plays: [], cur: null, played: new Set(), family: true, vol: 80, muted: false, favs: [], last: '', mode: 'watch', ready: false, armed: false, fetchedAt: 0, badVideos: new Set(), country: '', idleSaver: 0, name: '', errRun: 0 };
+const S = { station: null, plays: [], cur: null, played: new Set(), family: true, vol: 80, muted: false, favs: [], last: '', mode: 'watch', ready: false, armed: false, fetchedAt: 0, badVideos: new Set(), country: '', idleSaver: 0, name: '', errRun: 0, follow: true, step: 10 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('offair') || '{}'), { plays: [], cur: null, played: new Set(), badVideos: new Set(), ready: false, armed: false, station: null, mode: 'watch' }); } catch {}
-const save = () => { try { localStorage.setItem('offair', JSON.stringify({ family: S.family, vol: S.vol, muted: S.muted, favs: S.favs, last: S.last, country: S.country, idleSaver: S.idleSaver, name: S.name })); } catch {} };
+const save = () => { try { localStorage.setItem('offair', JSON.stringify({ family: S.family, vol: S.vol, muted: S.muted, favs: S.favs, last: S.last, country: S.country, idleSaver: S.idleSaver, name: S.name, follow: S.follow, step: S.step })); } catch {} };
 const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
 const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const fmtViews = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(n);
@@ -154,6 +154,8 @@ async function refresh(force) {
   if (!S.station) return;
   if (!force && Date.now() - S.fetchedAt < 15000) return;
   const plays = await fetchPlays(S.station.id); S.plays = plays; S.fetchedAt = Date.now();
+  /* follow live: the moment the station logs a song that is on air right now, jump to it at the live position */
+  if (S.follow && S.cur && S.armed) { const l = pickLive(); if (l && l.play.id !== S.cur.id && l.offset > 0 && !S.played.has(l.play.id)) startPlay(l.play, l.offset); }
   renderTimeline(); renderQueue(); renderBehind(); renderNext();
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
@@ -183,7 +185,7 @@ function renderBehind() {
   const behindMs = newest.id === S.cur.id ? 0 : newest.at - (S.cur.at + playerPos() * 1000);
   const isLive = behindMs < 60000;
   el.textContent = isLive ? '● live' : `${Math.max(1, Math.round(behindMs / 60000))} min behind live`; el.classList.toggle('live', isLive);
-  $('#btn-live').classList.toggle('on', isLive);
+  $('#btn-live').classList.toggle('on', S.follow); $('#btn-live').textContent = S.follow ? '● Live' : '○ Live'; $('#btn-live').title = S.follow ? 'Following live: click to stop following' : 'Click to follow live again';
 }
 function renderTimeline() {
   const tl = $('#timeline'); tl.innerHTML = ''; if (!S.plays.length) { tl.innerHTML = '<div class="tl-empty">' + (S.station ? 'Nothing logged for this station in the last four hours.' : 'Pick a station to see its last four hours: songs as blocks, ad breaks as gaps.') + '</div>'; return; }
@@ -241,7 +243,11 @@ function mediaSession(state) {
 /* ---------- controls ---------- */
 $('#bigplay').onclick = () => { S.armed = true; $('#bigplay').hidden = true; try { if (!S.muted) player.unMute(); player.playVideo(); } catch {} };
 $('#btn-play').onclick = () => { if (!S.ready || !S.cur) return; if (!S.armed) { $('#bigplay').click(); return; } const st = player.getPlayerState(); if (st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo(); };
-$('#btn-next').onclick = next; $('#btn-prev').onclick = prev; $('#btn-live').onclick = goLive;
+$('#btn-next').onclick = next; $('#btn-prev').onclick = prev;
+$('#btn-live').onclick = () => { S.follow = !S.follow; save(); renderBehind(); if (S.follow) { toast('Following live'); goLive(); } else toast('Not following live – you stay where you are'); };
+function nudge(sec) { if (!S.ready || !S.cur) return; const pos = Math.max(0, playerPos() + sec); player.seekTo(pos, true); toast(`${sec < 0 ? '⟲' : '⟳'} ${Math.abs(sec)}s`); renderBehind(); }
+$('#btn-back').onclick = () => nudge(-S.step); $('#btn-fwd').onclick = () => nudge(S.step);
+$('#step').value = String(S.step); $('#step').onchange = e => { S.step = +e.target.value; save(); toast(`Jumps are now ${S.step} seconds`); };
 $('#vol').value = S.vol; $('#vol').oninput = e => { S.vol = +e.target.value; S.muted = S.vol === 0; save(); if (S.ready) { player.setVolume(S.vol); S.muted ? player.mute() : player.unMute(); } $('#btn-mute').textContent = S.muted ? '🔇' : '🔊'; };
 $('#btn-mute').textContent = S.muted ? '🔇' : '🔊';
 $('#btn-mute').onclick = () => { S.muted = !S.muted; save(); if (S.ready) S.muted ? player.mute() : player.unMute(); $('#btn-mute').textContent = S.muted ? '🔇' : '🔊'; };
@@ -257,7 +263,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '/') { e.preventDefault(); $('#search').focus(); return; }
   if (S.mode !== 'watch') return;
   if (e.key === ' ') { e.preventDefault(); $('#btn-play').click(); }
-  else if (e.key === 'ArrowRight') next(); else if (e.key === 'ArrowLeft') prev(); else if (e.key === 'l' || e.key === 'L') goLive();
+  else if (e.key === 'ArrowRight') { e.shiftKey ? nudge(S.step) : next(); } else if (e.key === 'ArrowLeft') { e.shiftKey ? nudge(-S.step) : prev(); } else if (e.key === 'l' || e.key === 'L') $('#btn-live').click();
   else if (e.key === 'm' || e.key === 'M') $('#btn-mute').click();
   else if (e.key === 'f' || e.key === 'F') { const v = $('#video'); document.fullscreenElement ? document.exitFullscreen() : v.requestFullscreen && v.requestFullscreen(); }
   else if (e.key === 's' || e.key === 'S') { if (window.Saver) Saver.start(); }

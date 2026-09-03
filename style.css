@@ -89,6 +89,7 @@ h1, .mark, .cta, .np-title, .q-score, .saver-title, .ident-name { font-family: v
 .controls .live-btn { width: auto; padding: 0 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .controls .live-btn.on { color: var(--lime); border-color: rgba(200,255,61,.5); }
 .controls input[type=range] { width: 90px; accent-color: var(--lime); }
+.controls select { height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); padding: 0 6px; font-size: 13px; }
 
 /* ---- cards ---- */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
