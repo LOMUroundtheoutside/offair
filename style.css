@@ -355,3 +355,32 @@ body.stream .fs-bar { bottom: 9vh; }
 body.stream .video.st-broadcast .fs-bar { bottom: 20vh; }
 /* minimal: LIVE badge and the station chip only */
 [data-style=minimal] .st-viewers, [data-style=minimal] .st-ticker, [data-style=minimal] .st-lower { display: none; }
+
+/* ---- lyrics bubbles ---- */
+.video { container-type: inline-size; }
+.lyric { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); max-width: 82%; padding: .55em 1em; border-radius: 1.4em; z-index: 6; pointer-events: none;
+  background: rgba(7,20,16,.72); border: 1px solid rgba(200,255,61,.28); backdrop-filter: blur(10px); box-shadow: 0 12px 40px rgba(0,0,0,.45), 0 0 0 4px rgba(200,255,61,.06);
+  font-family: var(--display); font-weight: 800; font-size: clamp(15px, 3.4cqw, 46px); line-height: 1.15; color: #fff; text-align: center; text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
+.lyric::after { content: ''; position: absolute; left: 14%; bottom: -10px; width: 14px; height: 14px; border-radius: 50%; background: rgba(7,20,16,.72); border: 1px solid rgba(200,255,61,.28); }
+.lyric.in { animation: bubblein .55s cubic-bezier(.2,1.4,.4,1) both; }
+.lyric.in .lyric-text { display: inline-block; animation: bob 3.2s ease-in-out .55s infinite; }
+.lyric.out { animation: bubbleout .4s ease-in both; }
+@keyframes bubblein { 0% { transform: translate(-50%, 26px) scale(.5); opacity: 0; } 60% { transform: translate(-50%, -8px) scale(1.06); opacity: 1; } 80% { transform: translate(-50%, 3px) scale(.985); } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+@keyframes bubbleout { to { transform: translate(-50%, -18px) scale(.55); opacity: 0; filter: blur(3px); } }
+@keyframes bob { 50% { transform: translateY(-3px); } }
+body.stream .lyric { bottom: 24%; }
+body.saver .lyric { bottom: 30%; }
+.controls .ly.on, .fs-bar .ly.on { color: var(--lime); border-color: rgba(200,255,61,.5); }
+.controls { position: relative; }
+.lyrics-pop { position: absolute; right: 0; bottom: calc(100% + 10px); width: 300px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 14px 40px rgba(0,0,0,.5); z-index: 30; display: grid; gap: 8px; text-align: left; }
+.ly-row { display: flex; align-items: center; gap: 8px; }
+.ly-switch { display: flex; align-items: center; gap: 8px; font-weight: 600; flex: 1; }
+.ly-switch input { accent-color: var(--lime); width: 16px; height: 16px; }
+.ly-x { background: none; border: 0; color: var(--muted); padding: 2px 6px; }
+.ly-timing span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-right: 2px; }
+.ly-timing button { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; font-family: var(--mono); font-size: 12px; }
+.ly-timing b { font-family: var(--mono); min-width: 44px; text-align: center; color: var(--amber); }
+.ly-timing .ly-reset { font-family: var(--body); color: var(--muted); }
+.ly-status { font-family: var(--mono); font-size: 12px; color: var(--lime); min-height: 16px; }
+.ly-hint { color: var(--muted); font-size: 12px; line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) { .lyric.in { animation: fadein .3s both; } .lyric.in .lyric-text { animation: none; } .lyric.out { animation: fadeout .3s both; } @keyframes fadein { from { opacity: 0; } } @keyframes fadeout { to { opacity: 0; } } }

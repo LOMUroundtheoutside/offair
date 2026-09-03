@@ -53,6 +53,12 @@ made up. Three styles: Studio (badges in the corners), Broadcast (one bar along
 the bottom) and Minimal. Playback is ordinary Watch mode in fullscreen, so the
 fullscreen control strip works and Esc comes back. `?mode=stream` deep-links it.
 
+**Lyrics.** Timed lyrics from [LRCLIB](https://lrclib.net) pop up over the video as
+bubbles, one line at a time, in the normal view, fullscreen, Stream and Screensaver. The 💬
+button (or `Y`) turns them on and off and has a ±0.5 s timing nudge, because music videos often
+have an intro the audio track doesn't. Lines are looked up by artist, title and length, with a
+search fallback; not every song has timed lyrics.
+
 **Screensaver.** Fullscreen video with a live clock and date, the station
 ident, up-next, and a slow canvas animation coloured from the album art of
 whatever is playing (the artwork is served with CORS, so it's sampled on a tiny
@@ -83,6 +89,7 @@ watching. Move the mouse or press a key to come back.
 | `app.js` | Station rail, start panel, data fetching, the ad-skipping play logic, timeline, controls, media session |
 | `quiz.js` | Question builders, round flow, fuzzy answer matching, scoreboard over the relay |
 | `stream.js` | Stream mode: LIVE badge, uptime, viewer count, lower-third, ticker, three styles |
+| `lyrics.js` | Lyrics bubbles: LRCLIB lookup, LRC parsing, timing follow, on/off and nudge |
 | `saver.js` | Screensaver: fullscreen, clock, palette from artwork, six canvas styles, idle auto-start |
 | `stations.js` | `STATIONS` and `COUNTRIES` |
 
