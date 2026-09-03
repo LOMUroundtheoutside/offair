@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Offair">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -54,6 +54,16 @@
           <div class="saver-hint">move the mouse or press a key to leave</div>
         </div>
         <div class="fs-np" id="fs-np"><div class="fs-station" id="fs-station"></div><div class="fs-title" id="fs-title"></div><div class="fs-artist" id="fs-artist"></div></div>
+        <div class="fs-bar" id="fs-bar">
+          <button id="fsb-play" title="Play / pause (space)">⏵</button>
+          <button id="fsb-next" title="Skip to the next song (→)">⏭</button>
+          <button id="fsb-back" class="nudge" title="Back (Shift+←)">−10s</button>
+          <button id="fsb-fwd" class="nudge" title="Forward (Shift+→)">+10s</button>
+          <button id="fsb-live" class="live-btn" title="Follow live">● Live</button>
+          <button id="fsb-mute" title="Mute (M)">🔊</button>
+          <input type="range" id="fsb-vol" min="0" max="100" value="80" title="Volume (↑ ↓)">
+          <button id="fsb-exit" class="exit" title="Leave fullscreen (Esc or F)">⤢ Exit</button>
+        </div>
         <div class="ident" id="ident" hidden>
           <img id="ident-logo" alt="">
           <div><div class="ident-name" id="ident-name"></div><div class="ident-meta" id="ident-meta"></div></div>
@@ -200,9 +210,9 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js"></script>
-<script src="stations.js?v=5"></script>
-<script src="app.js?v=5"></script>
-<script src="quiz.js?v=5"></script>
-<script src="saver.js?v=5"></script>
+<script src="stations.js?v=6"></script>
+<script src="app.js?v=6"></script>
+<script src="quiz.js?v=6"></script>
+<script src="saver.js?v=6"></script>
 </body>
 </html>

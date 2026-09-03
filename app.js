@@ -273,8 +273,29 @@ $('#btn-back').onclick = () => nudge(-S.step); $('#btn-fwd').onclick = () => nud
 function stepLabels() { $('#btn-back').textContent = `−${S.step}s`; $('#btn-fwd').textContent = `+${S.step}s`; }
 $('#step').value = String(S.step); $('#step').onchange = e => { S.step = +e.target.value; save(); stepLabels(); toast(`Jumps are now ${S.step} seconds`); }; stepLabels();
 function toggleFs() { const v = $('#video'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (v.requestFullscreen) v.requestFullscreen().catch(() => {}); }
-$('#btn-fs').onclick = toggleFs; $('#video').addEventListener('dblclick', e => { if (!document.body.classList.contains('saver')) toggleFs(); });
-document.addEventListener('fullscreenchange', () => { document.body.classList.toggle('fs', !!document.fullscreenElement && !document.body.classList.contains('saver')); $('#btn-fs').classList.toggle('on', !!document.fullscreenElement); });
+$('#btn-fs').onclick = toggleFs; $('#video').addEventListener('dblclick', e => { if (!document.body.classList.contains('saver') && !e.target.closest('.fs-bar')) toggleFs(); });
+/* fullscreen strip: every button just presses its twin in the main controls, so there is one set of logic */
+$('#fsb-play').onclick = () => $('#btn-play').click(); $('#fsb-next').onclick = () => $('#btn-next').click();
+$('#fsb-back').onclick = () => $('#btn-back').click(); $('#fsb-fwd').onclick = () => $('#btn-fwd').click();
+$('#fsb-live').onclick = () => $('#btn-live').click(); $('#fsb-mute').onclick = () => $('#btn-mute').click();
+$('#fsb-exit').onclick = toggleFs;
+$('#fsb-vol').oninput = e => { $('#vol').value = e.target.value; $('#vol').oninput({ target: $('#vol') }); };
+function syncFsBar() {
+  $('#fsb-play').textContent = $('#btn-play').textContent; $('#fsb-mute').textContent = $('#btn-mute').textContent;
+  $('#fsb-back').textContent = $('#btn-back').textContent; $('#fsb-fwd').textContent = $('#btn-fwd').textContent;
+  $('#fsb-live').classList.toggle('on', $('#btn-live').classList.contains('on')); $('#fsb-vol').value = $('#vol').value;
+}
+new MutationObserver(syncFsBar).observe($('.controls'), { subtree: true, childList: true, characterData: true, attributes: true });
+$('#vol').addEventListener('input', syncFsBar);
+let fsIdleT = 0;
+function fsWake() {
+  if (!document.body.classList.contains('fs')) return;
+  $('#video').classList.remove('idle'); clearTimeout(fsIdleT);
+  fsIdleT = setTimeout(() => { if ($('#fs-bar').matches(':hover')) fsWake(); else $('#video').classList.add('idle'); }, 3000);
+}
+['mousemove', 'pointerdown', 'touchstart'].forEach(ev => $('#video').addEventListener(ev, fsWake, { passive: true }));
+document.addEventListener('keydown', () => { if (document.body.classList.contains('fs')) fsWake(); });
+document.addEventListener('fullscreenchange', () => { document.body.classList.toggle('fs', !!document.fullscreenElement && !document.body.classList.contains('saver')); $('#btn-fs').classList.toggle('on', !!document.fullscreenElement); $('#video').classList.remove('idle'); if (document.body.classList.contains('fs')) { syncFsBar(); fsWake(); } });
 
 /* ---------- install as an app ---------- */
 let installPrompt = null;

@@ -291,6 +291,18 @@ body.fs .fs-np.show { animation: fsnp 7s ease forwards; }
 .fs-title { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4.5vw, 64px); line-height: 1; color: #fff; }
 .fs-artist { font-size: clamp(16px, 2vw, 26px); color: #dfe9e3; margin-top: 6px; }
 body.fs .video { border-radius: 0; border: 0; }
+/* fullscreen control strip: lives inside the video box so it survives requestFullscreen; auto-hides when the mouse rests */
+.fs-bar { display: none; position: absolute; left: 50%; bottom: 4vh; transform: translateX(-50%); z-index: 6; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 16px; background: rgba(7,20,16,.86); border: 1px solid var(--line); backdrop-filter: blur(8px); transition: opacity .25s; max-width: 94vw; flex-wrap: wrap; justify-content: center; }
+body.fs .fs-bar { display: flex; }
+body.fs .video.idle .fs-bar { opacity: 0; pointer-events: none; }
+body.fs .video.idle { cursor: none; }
+.fs-bar button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: inherit; font-size: 18px; }
+.fs-bar button:hover { border-color: var(--muted); }
+.fs-bar .nudge, .fs-bar .exit { width: auto; padding: 0 12px; font-family: var(--mono); font-size: 13px; }
+.fs-bar .live-btn { width: auto; padding: 0 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.fs-bar .live-btn.on { color: var(--lime); border-color: rgba(200,255,61,.5); }
+.fs-bar input[type=range] { width: 110px; accent-color: var(--lime); }
+body.fs .fs-np { bottom: 16vh; }
 body.fs .ident { left: 4vw; bottom: auto; top: 4vh; }
 .video:fullscreen .yt-crop iframe, .video:fullscreen .yt-crop #yt { top: -8%; left: -8%; width: 116%; height: 116%; }
 .debug { position: fixed; left: 12px; bottom: 12px; z-index: 65; max-width: min(640px, 90vw); max-height: 40vh; overflow: auto; background: rgba(7,20,16,.95); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: 12px var(--mono); color: var(--lime); white-space: pre-wrap; margin: 0; }
