@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Offair">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -22,6 +22,7 @@
   <a class="brand" href="#" id="brand"><span class="mark">OFF<span>AIR</span></span><span class="tag">radio, minus the ads</span></a>
   <nav class="modes" id="modes">
     <button data-mode="watch" class="on">Watch</button>
+    <button data-mode="stream">Stream</button>
     <button data-mode="quiz">Quiz</button>
     <button data-mode="saver">Screensaver</button>
   </nav>
@@ -63,6 +64,15 @@
           <button id="fsb-mute" title="Mute (M)">🔊</button>
           <input type="range" id="fsb-vol" min="0" max="100" value="80" title="Volume (↑ ↓)">
           <button id="fsb-exit" class="exit" title="Leave fullscreen (Esc or F)">⤢ Exit</button>
+        </div>
+        <div class="stream-ui" id="stream-ui" data-style="studio">
+          <div class="st-top">
+            <div class="st-live"><i></i>LIVE <span id="st-uptime">00:00:00</span></div>
+            <div class="st-chip"><img id="st-logo" alt=""><div><div class="st-name" id="st-name"></div><div class="st-meta" id="st-meta"></div></div></div>
+            <div class="st-viewers">👁 <b id="st-viewers-n">0</b> watching</div>
+          </div>
+          <div class="st-lower" id="st-lower"><div class="st-bar"></div><div><div class="st-title" id="st-title"></div><div class="st-artist" id="st-artist"></div></div></div>
+          <div class="st-ticker"><div class="st-ticker-text" id="st-ticker-text"></div></div>
         </div>
         <div class="ident" id="ident" hidden>
           <img id="ident-logo" alt="">
@@ -170,6 +180,21 @@
     </section>
 
     <!-- ===== SCREENSAVER ===== -->
+    <section class="view" id="view-stream" hidden>
+      <div class="saver-start">
+        <div class="eyebrow">Go live (sort of)</div>
+        <h1>Make the station look like a live stream.</h1>
+        <p>Full screen video with a LIVE badge and uptime clock, the station in its own colours, a lower-third for every song, a ticker of what the station played and a viewer count that is entirely made up. Playback is exactly the same as Watch. Wiggle the mouse for the controls; press Esc to come back.</p>
+        <div class="saver-opts">
+          <label>Style
+            <select id="stream-style"><option value="studio">Studio – badges in the corners</option><option value="broadcast">Broadcast – bar along the bottom</option><option value="minimal">Minimal – just the LIVE badge</option></select>
+          </label>
+          <label><input type="checkbox" id="stream-viewers" checked> Show a viewer count (pretend)</label>
+          <label><input type="checkbox" id="stream-ticker" checked> Scrolling ticker of recent songs</label>
+        </div>
+        <button class="cta" id="stream-go">Go live</button>
+      </div>
+    </section>
     <section class="view" id="view-saver" hidden>
       <div class="saver-start">
         <div class="eyebrow">Leave it on</div>
@@ -210,9 +235,10 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js"></script>
-<script src="stations.js?v=7"></script>
-<script src="app.js?v=7"></script>
-<script src="quiz.js?v=7"></script>
-<script src="saver.js?v=7"></script>
+<script src="stations.js?v=8"></script>
+<script src="app.js?v=8"></script>
+<script src="quiz.js?v=8"></script>
+<script src="saver.js?v=8"></script>
+<script src="stream.js?v=8"></script>
 </body>
 </html>

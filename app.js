@@ -4,12 +4,12 @@
 
 const API = 'https://api.fm.video/api';
 const BUFFER = 40;                    /* songs to fetch = roughly the last four hours */
-const POLL_MS = 45000, WINDOW_MS = 4 * 3600e3, BREAK_MIN = 3.5, OVERRUN_S = 25;
+const POLL_MS = 20000, WINDOW_MS = 4 * 3600e3, BREAK_MIN = 3.5, OVERRUN_S = 25;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 
 const S = { station: null, plays: [], cur: null, played: new Set(), family: true, vol: 80, muted: false, favs: [], last: '', mode: 'watch', ready: false, armed: false, fetchedAt: 0, badVideos: new Set(), country: '', idleSaver: 0, name: '', errRun: 0, follow: true, step: 10 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('offair') || '{}'), { plays: [], cur: null, played: new Set(), badVideos: new Set(), ready: false, armed: false, station: null, mode: 'watch' }); } catch {}
-const save = () => { try { localStorage.setItem('offair', JSON.stringify({ family: S.family, vol: S.vol, muted: S.muted, favs: S.favs, last: S.last, country: S.country, idleSaver: S.idleSaver, name: S.name, follow: S.follow, step: S.step })); } catch {} };
+const save = () => { try { localStorage.setItem('offair', JSON.stringify({ family: S.family, vol: S.vol, muted: S.muted, favs: S.favs, last: S.last, country: S.country, idleSaver: S.idleSaver, name: S.name, follow: S.follow, step: S.step, streamStyle: S.streamStyle, streamViewers: S.streamViewers, streamTicker: S.streamTicker })); } catch {} };
 const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
 const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const fmtViews = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(n);
@@ -139,8 +139,13 @@ function startPlay(play, offset = 0) {
   if (S.armed) player.loadVideoById(spec);
   else { player.cueVideoById(spec); $('#bigplay').hidden = false; $('#video-msg').hidden = true; }   /* browsers want a click before sound */
   if (window.Saver) Saver.songChanged(play);
+  if (window.Stream) Stream.songChanged(play);
 }
-function next() { const n = pickNext(); if (n) startPlay(n.play, n.offset); }
+function next() {
+  /* following live: when a song ends, check the log first and join whatever is on air at the live position, not from the top */
+  if (S.follow) { refresh(true).catch(() => {}).then(() => { const l = pickLive(); if (l && onAir(l.play) && !(S.cur && l.play.id === S.cur.id)) { startPlay(l.play, l.offset); dbg('ended → live ' + l.play.t + ' @' + Math.round(l.offset) + 's'); return; } const n = pickNext(); if (n) startPlay(n.play, n.offset); }); return; }
+  const n = pickNext(); if (n) startPlay(n.play, n.offset);
+}
 function prev() { const p = pickPrev(); if (p) startPlay(p.play, p.offset); else toast('Nothing earlier in the log'); }
 async function resync(reason) {
   if (!S.follow || !S.cur || !S.ready) return;
@@ -197,10 +202,16 @@ function playerPos() { try { return S.ready ? player.getCurrentTime() || 0 : 0; 
 function renderBehind() {
   const el = $('#behind'); if (!S.cur || !S.plays.length) { el.textContent = ''; return; }
   /* "behind" = how far the song we're on sits behind the newest song the station has logged */
-  const newest = S.plays[S.plays.length - 1];
-  const behindMs = newest.id === S.cur.id ? 0 : newest.at - (S.cur.at + playerPos() * 1000);
-  const isLive = behindMs < 60000;
-  el.textContent = isLive ? '● live' : `${Math.max(1, Math.round(behindMs / 60000))} min behind live`; el.classList.toggle('live', isLive);
+  const newest = S.plays[S.plays.length - 1], pos = playerPos();
+  /* three honest states: in sync with the broadcast; the station is in a break (or its next song isn't logged yet) so
+     we're replaying the newest song; or we're genuinely behind because newer songs are waiting */
+  const inSync = onAir(S.cur) && Math.abs(liveOffset(S.cur) - pos) < 60;
+  const behindMs = newest.id === S.cur.id ? 0 : newest.at - (S.cur.at + pos * 1000);
+  const onBreak = !inSync && newest.id === S.cur.id;
+  const isLive = inSync || behindMs < 60000;
+  el.textContent = inSync ? '● live' : onBreak ? '● live · station on a break' : `${Math.max(1, Math.round(behindMs / 60000))} min behind live`;
+  el.classList.toggle('live', isLive); el.classList.toggle('break', onBreak);
+  el.title = inSync ? 'In sync with the broadcast' : onBreak ? 'The station is in ads or talk (or its next song is not logged yet), so this replays the newest song until something new is logged' : 'How far behind the live broadcast you are';
   $('#btn-live').classList.toggle('on', S.follow); $('#btn-live').textContent = S.follow ? '● Live' : '○ Live'; $('#btn-live').title = S.follow ? 'Following live: click to stop following' : 'Click to follow live again';
 }
 function renderTimeline() {
@@ -235,7 +246,7 @@ function renderQueue() {
 setInterval(() => {
   if (!S.cur || !S.ready) return;
   const pos = playerPos();
-  if (S.mode === 'watch' || document.body.classList.contains('saver')) {
+  if (S.mode === 'watch' || S.mode === 'stream' || document.body.classList.contains('saver')) {
     renderBehind();
     const you = $('.tl-you'); if (you) { const tl = $('#timeline'); you.style.left = Math.min(tl.clientWidth - 3, (S.cur.at + pos * 1000 - (Date.now() - WINDOW_MS)) / WINDOW_MS * tl.clientWidth) + 'px'; }
     /* a 10-minute video for a 3-minute radio edit: move on once we're well past the song's length */
@@ -319,7 +330,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '?') { $('#help').hidden = !$('#help').hidden; return; }
   if (e.key === 'd' || e.key === 'D') { const el = $('#debug'); el.hidden = !el.hidden; el.textContent = DBG.join('\n') || 'nothing logged yet'; return; }
   if (e.key === '/') { e.preventDefault(); $('#search').focus(); return; }
-  if (S.mode !== 'watch') return;
+  if (S.mode !== 'watch' && S.mode !== 'stream') return;
   if (e.key === ' ') { e.preventDefault(); $('#btn-play').click(); }
   else if (e.key === 'ArrowRight') { e.shiftKey ? nudge(S.step) : next(); } else if (e.key === 'ArrowLeft') { e.shiftKey ? nudge(-S.step) : prev(); } else if (e.key === 'l' || e.key === 'L') $('#btn-live').click();
   else if (e.key === 'm' || e.key === 'M') $('#btn-mute').click();
@@ -331,11 +342,12 @@ document.addEventListener('keydown', e => {
 /* ---------- modes ---------- */
 function setMode(m) {
   S.mode = m; $$('#modes button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
-  $('#view-watch').hidden = m !== 'watch'; $('#view-quiz').hidden = m !== 'quiz'; $('#view-saver').hidden = m !== 'saver';
-  if (m !== 'watch' && S.ready && S.cur) { try { player.pauseVideo(); } catch {} }
+  $('#view-watch').hidden = m !== 'watch'; $('#view-quiz').hidden = m !== 'quiz'; $('#view-saver').hidden = m !== 'saver'; $('#view-stream').hidden = m !== 'stream';
+  if (m !== 'watch' && m !== 'stream' && S.ready && S.cur) { try { player.pauseVideo(); } catch {} }
   if (m === 'watch' && S.ready && S.cur && S.armed) { try { player.playVideo(); } catch {} }
   if (m === 'quiz' && window.Quiz) Quiz.enter();
   if (m === 'saver' && window.Saver) Saver.enter();
+  if (m === 'stream' && window.Stream) Stream.enter();
 }
 $$('#modes button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
 $('#brand').onclick = e => { e.preventDefault(); setMode('watch'); };
@@ -345,4 +357,4 @@ renderRail(); renderStart(); detectCountry();
 window.Offair = { S, byId, fetchPlays, startPlay, setMode, toast, beep, fmtViews, fmtTime, fmtDur, stationLogo, playerPos, save, get player() { return player; } };
 { const last = S.last && byId[S.last]; if (last) selectStation(last); }
 /* ?mode=quiz or ?mode=saver opens straight into that view (used by the Omarchy bar widget) */
-{ const m = new URLSearchParams(location.search).get('mode'); if (m === 'quiz' || m === 'saver') setMode(m); }
+{ const m = new URLSearchParams(location.search).get('mode'); if (m === 'quiz' || m === 'saver' || m === 'stream') setMode(m); }
