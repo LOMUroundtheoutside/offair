@@ -17,6 +17,13 @@ skipped.
 
 ## Modes
 
+The **Live** button follows the broadcast: Offair polls the log every 20 s, joins a
+newly logged song at the live position, and when a song ends checks the log before
+moving on. The status next to the controls is honest about the three states: `live`
+(in sync), `live · station on a break` (the newest logged song has finished and the
+station is in ads or talk, so it replays until something new is logged) and
+`N min behind live`. Being behind during a break is the price of skipping the ads.
+
 **Watch.** 224 stations across 17 countries, grouped by country with the
 country you're in first (from FM.video's geo endpoint), favourites, and search
 (`/`). A start panel suggests stations near you or your favourites. Controls:
@@ -38,6 +45,13 @@ on that frequency), and longer song. Best score per station is kept in the
 browser; scores can be posted with a name to a per-station top-10 that
 everyone sees (a public MQTT relay holds one retained document per player per
 station), and results copy as a shareable emoji grid.
+
+**Stream.** Makes the station look like a live stream: a LIVE badge with an uptime
+clock, the station chip in its own brand colour, a lower-third for each song, a
+ticker of what the station played recently and a viewer count that is entirely
+made up. Three styles: Studio (badges in the corners), Broadcast (one bar along
+the bottom) and Minimal. Playback is ordinary Watch mode in fullscreen, so the
+fullscreen control strip works and Esc comes back. `?mode=stream` deep-links it.
 
 **Screensaver.** Fullscreen video with a live clock and date, the station
 ident, up-next, and a slow canvas animation coloured from the album art of
@@ -68,6 +82,7 @@ watching. Move the mouse or press a key to come back.
 | `style.css` | Look and feel: Syne + Instrument Sans + JetBrains Mono, green-black studio palette |
 | `app.js` | Station rail, start panel, data fetching, the ad-skipping play logic, timeline, controls, media session |
 | `quiz.js` | Question builders, round flow, fuzzy answer matching, scoreboard over the relay |
+| `stream.js` | Stream mode: LIVE badge, uptime, viewer count, lower-third, ticker, three styles |
 | `saver.js` | Screensaver: fullscreen, clock, palette from artwork, six canvas styles, idle auto-start |
 | `stations.js` | `STATIONS` and `COUNTRIES` |
 
