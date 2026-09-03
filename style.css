@@ -89,6 +89,7 @@ h1, .mark, .cta, .np-title, .q-score, .saver-title, .ident-name { font-family: v
 .controls .live-btn { width: auto; padding: 0 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .controls .live-btn.on { color: var(--lime); border-color: rgba(200,255,61,.5); }
 .controls input[type=range] { width: 90px; accent-color: var(--lime); }
+.controls .nudge { width: auto; padding: 0 10px; font-family: var(--mono); font-size: 13px; }
 .controls select { height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); padding: 0 6px; font-size: 13px; }
 
 /* ---- cards ---- */
@@ -277,3 +278,15 @@ kbd { font-family: var(--mono); font-size: 12px; background: var(--panel2); bord
   .np-title { font-size: 17px; }
   .start-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ---- fullscreen video: a now-playing card that fades in on each song, then hides ---- */
+.fs-np { display: none; position: absolute; left: 4vw; bottom: 6vh; max-width: 70vw; opacity: 0; pointer-events: none; text-shadow: 0 4px 30px rgba(0,0,0,.7); }
+body.fs .fs-np { display: block; }
+body.fs .fs-np.show { animation: fsnp 7s ease forwards; }
+@keyframes fsnp { 0% { opacity: 0; transform: translateY(10px); } 8% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.fs-station { font-family: var(--mono); font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--lime); margin-bottom: 8px; }
+.fs-title { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4.5vw, 64px); line-height: 1; color: #fff; }
+.fs-artist { font-size: clamp(16px, 2vw, 26px); color: #dfe9e3; margin-top: 6px; }
+body.fs .video { border-radius: 0; border: 0; }
+body.fs .ident { left: 4vw; bottom: auto; top: 4vh; }
+.video:fullscreen .yt-crop iframe, .video:fullscreen .yt-crop #yt { top: -8%; left: -8%; width: 116%; height: 116%; }

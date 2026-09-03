@@ -173,6 +173,8 @@ function renderNow() {
   const art = $('#art'); art.classList.toggle('empty', !p.art); if (p.art) art.src = p.art;
   $('#saver-title').textContent = p.t; $('#saver-artist').textContent = p.a;
   $('#saver-station').textContent = S.station ? `${S.station.name} · ${S.station.freq}` : '';
+  $('#fs-title').textContent = p.t; $('#fs-artist').textContent = p.a; $('#fs-station').textContent = S.station ? `${S.station.name} · ${S.station.freq || S.station.genre}` : '';
+  const fs = $('#fs-np'); fs.classList.remove('show'); void fs.offsetWidth; fs.classList.add('show');
   document.title = `${p.a} – ${p.t} · Offair`;
   renderNext(); mediaSession();
 }
@@ -247,7 +249,11 @@ $('#btn-next').onclick = next; $('#btn-prev').onclick = prev;
 $('#btn-live').onclick = () => { S.follow = !S.follow; save(); renderBehind(); if (S.follow) { toast('Following live'); goLive(); } else toast('Not following live – you stay where you are'); };
 function nudge(sec) { if (!S.ready || !S.cur) return; const pos = Math.max(0, playerPos() + sec); player.seekTo(pos, true); toast(`${sec < 0 ? '⟲' : '⟳'} ${Math.abs(sec)}s`); renderBehind(); }
 $('#btn-back').onclick = () => nudge(-S.step); $('#btn-fwd').onclick = () => nudge(S.step);
-$('#step').value = String(S.step); $('#step').onchange = e => { S.step = +e.target.value; save(); toast(`Jumps are now ${S.step} seconds`); };
+function stepLabels() { $('#btn-back').textContent = `−${S.step}s`; $('#btn-fwd').textContent = `+${S.step}s`; }
+$('#step').value = String(S.step); $('#step').onchange = e => { S.step = +e.target.value; save(); stepLabels(); toast(`Jumps are now ${S.step} seconds`); }; stepLabels();
+function toggleFs() { const v = $('#video'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (v.requestFullscreen) v.requestFullscreen().catch(() => {}); }
+$('#btn-fs').onclick = toggleFs; $('#video').addEventListener('dblclick', e => { if (!document.body.classList.contains('saver')) toggleFs(); });
+document.addEventListener('fullscreenchange', () => { document.body.classList.toggle('fs', !!document.fullscreenElement && !document.body.classList.contains('saver')); $('#btn-fs').textContent = document.fullscreenElement ? '⤢' : '⛶'; });
 $('#vol').value = S.vol; $('#vol').oninput = e => { S.vol = +e.target.value; S.muted = S.vol === 0; save(); if (S.ready) { player.setVolume(S.vol); S.muted ? player.mute() : player.unMute(); } $('#btn-mute').textContent = S.muted ? '🔇' : '🔊'; };
 $('#btn-mute').textContent = S.muted ? '🔇' : '🔊';
 $('#btn-mute').onclick = () => { S.muted = !S.muted; save(); if (S.ready) S.muted ? player.mute() : player.unMute(); $('#btn-mute').textContent = S.muted ? '🔇' : '🔊'; };
@@ -265,7 +271,7 @@ document.addEventListener('keydown', e => {
   if (e.key === ' ') { e.preventDefault(); $('#btn-play').click(); }
   else if (e.key === 'ArrowRight') { e.shiftKey ? nudge(S.step) : next(); } else if (e.key === 'ArrowLeft') { e.shiftKey ? nudge(-S.step) : prev(); } else if (e.key === 'l' || e.key === 'L') $('#btn-live').click();
   else if (e.key === 'm' || e.key === 'M') $('#btn-mute').click();
-  else if (e.key === 'f' || e.key === 'F') { const v = $('#video'); document.fullscreenElement ? document.exitFullscreen() : v.requestFullscreen && v.requestFullscreen(); }
+  else if (e.key === 'f' || e.key === 'F') toggleFs();
   else if (e.key === 's' || e.key === 'S') { if (window.Saver) Saver.start(); }
   else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); $('#vol').value = Math.max(0, Math.min(100, S.vol + (e.key === 'ArrowUp' ? 5 : -5))); $('#vol').oninput({ target: $('#vol') }); }
 });

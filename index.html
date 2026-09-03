@@ -46,6 +46,7 @@
           <div class="saver-np"><div class="saver-station" id="saver-station"></div><div class="saver-title" id="saver-title"></div><div class="saver-artist" id="saver-artist"></div><div class="saver-next" id="saver-next"></div></div>
           <div class="saver-hint">move the mouse or press a key to leave</div>
         </div>
+        <div class="fs-np" id="fs-np"><div class="fs-station" id="fs-station"></div><div class="fs-title" id="fs-title"></div><div class="fs-artist" id="fs-artist"></div></div>
         <div class="ident" id="ident" hidden>
           <img id="ident-logo" alt="">
           <div><div class="ident-name" id="ident-name"></div><div class="ident-meta" id="ident-meta"></div></div>
@@ -74,12 +75,13 @@
           <button id="btn-prev" title="Previous song (←)">⏮</button>
           <button id="btn-play" title="Play / pause (space)">⏵</button>
           <button id="btn-next" title="Next song (→)">⏭</button>
-          <button id="btn-back" title="Back a few seconds (Shift+←)">⟲</button>
-          <button id="btn-fwd" title="Forward a few seconds (Shift+→)">⟳</button>
+          <button id="btn-back" class="nudge" title="Back a few seconds (Shift+←)">−10s</button>
+          <button id="btn-fwd" class="nudge" title="Forward a few seconds (Shift+→)">+10s</button>
           <select id="step" title="How far ⟲ and ⟳ jump"><option value="5">5s</option><option value="10">10s</option><option value="30">30s</option></select>
           <button id="btn-live" class="live-btn" title="Follow live: jump to whatever the station is playing the moment it's logged">● Live</button>
           <button id="btn-mute" title="Mute (M)">🔊</button>
           <input type="range" id="vol" min="0" max="100" value="80" title="Volume (↑ ↓)">
+          <button id="btn-fs" title="Fullscreen (F, or double-click the video)">⛶</button>
         </div>
       </div>
 
