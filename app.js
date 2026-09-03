@@ -104,6 +104,7 @@ function pickPrev() {
 let player = null;
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('yt', {
+    host: 'https://www.youtube-nocookie.com',
     width: '100%', height: '100%',
     playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, cc_load_policy: 0, ...(/^https?:/.test(location.protocol) ? { origin: location.origin } : {}) },
     events: {

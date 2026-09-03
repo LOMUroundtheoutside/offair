@@ -32,7 +32,7 @@
   function ensureYt2(container) {
     const clip = document.createElement('div'); clip.className = 'clip'; clip.innerHTML = '<div class="yt-crop"><div id="yt2"></div></div><div class="cover"></div>'; container.appendChild(clip);
     if (yt2) { try { yt2.destroy(); } catch {} yt2 = null; yt2Ready = false; }
-    yt2 = new YT.Player('yt2', { width: '100%', height: '100%', playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, rel: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, mute: 1, cc_load_policy: 0, ...(/^https?:/.test(location.protocol) ? { origin: location.origin } : {}) }, events: { onReady() { yt2Ready = true; yt2.mute(); if (ensureYt2.pending) { yt2.loadVideoById(ensureYt2.pending); ensureYt2.pending = null; } }, onError() { if (round && round.q && round.q.onVideoError) round.q.onVideoError(); } } });
+    yt2 = new YT.Player('yt2', { host: 'https://www.youtube-nocookie.com', width: '100%', height: '100%', playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, rel: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, mute: 1, cc_load_policy: 0, ...(/^https?:/.test(location.protocol) ? { origin: location.origin } : {}) }, events: { onReady() { yt2Ready = true; yt2.mute(); if (ensureYt2.pending) { yt2.loadVideoById(ensureYt2.pending); ensureYt2.pending = null; } }, onError() { if (round && round.q && round.q.onVideoError) round.q.onVideoError(); } } });
     return clip;
   }
   function playClip(y, start = 20) { const spec = { videoId: y, startSeconds: start }; if (yt2 && yt2Ready) { yt2.mute(); yt2.loadVideoById(spec); } else ensureYt2.pending = spec; }

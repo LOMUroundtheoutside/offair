@@ -1,6 +1,6 @@
 /* Offair service worker: makes the site installable and keeps the shell available offline.
    Network first for everything, so updates arrive on the next load; the cache is only a fallback. */
-const VERSION = 'offair-v4';
+const VERSION = 'offair-v5';
 const SHELL = ['./', './index.html', './style.css', './app.js', './quiz.js', './saver.js', './stations.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
