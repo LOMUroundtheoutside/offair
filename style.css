@@ -76,6 +76,9 @@ h1, .mark, .cta, .np-title, .q-score, .saver-title, .ident-name { font-family: v
 /* ---- now bar ---- */
 .nowbar { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
 .art { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--panel2); }
+.art.empty { visibility: hidden; }
+.tl-empty, .q-empty { color: var(--muted); font-size: 13px; padding: 16px 12px; display: block; }
+.queue .q-empty { grid-column: 1 / -1; }
 .np { min-width: 0; }
 .np-title { font-size: 20px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .np-artist { color: #c9d8d0; font-weight: 500; }

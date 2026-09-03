@@ -63,9 +63,9 @@
       </div>
 
       <div class="nowbar">
-        <img class="art" id="art" alt="" hidden>
+        <img class="art empty" id="art" alt="">
         <div class="np">
-          <div class="np-title" id="np-title">Nothing playing</div>
+          <div class="np-title" id="np-title">Nothing playing yet</div>
           <div class="np-artist" id="np-artist"></div>
           <div class="np-sub" id="np-sub"></div>
           <div class="np-next" id="np-next" hidden></div>
@@ -82,13 +82,13 @@
 
       <div class="card timeline-card">
         <div class="card-head"><span>The last four hours on <b id="tl-station">…</b></span><span class="stat" id="tl-stats"></span></div>
-        <div class="timeline" id="timeline"></div>
+        <div class="timeline" id="timeline"><div class="tl-empty">Pick a station to see its last four hours: songs as blocks, ad breaks as gaps.</div></div>
         <div class="tl-legend"><i class="k-song"></i>song <i class="k-gap"></i>ads &amp; talk, skipped <i class="k-you"></i>you <i class="k-live"></i>live edge</div>
       </div>
 
       <div class="card queue-card">
         <div class="card-head"><span>Recently on this station</span><span class="stat">tap a song to play it</span></div>
-        <ol class="queue" id="queue"></ol>
+        <ol class="queue" id="queue"><li class="q-empty">Nothing yet.</li></ol>
       </div>
     </section>
 

@@ -168,7 +168,7 @@ function renderNow() {
   const p = S.cur; if (!p) return;
   $('#np-title').textContent = p.t; $('#np-artist').textContent = p.a;
   $('#np-sub').textContent = `played ${fmtTime(p.at)} · ${fmtDur(p.dur)} · ${fmtViews(p.views)} views` + (p.x ? ' · explicit' : '');
-  const art = $('#art'); if (p.art) { art.src = p.art; art.hidden = false; } else art.hidden = true;
+  const art = $('#art'); art.classList.toggle('empty', !p.art); if (p.art) art.src = p.art;
   $('#saver-title').textContent = p.t; $('#saver-artist').textContent = p.a;
   $('#saver-station').textContent = S.station ? `${S.station.name} · ${S.station.freq}` : '';
   document.title = `${p.a} – ${p.t} · Offair`;
@@ -186,7 +186,7 @@ function renderBehind() {
   $('#btn-live').classList.toggle('on', isLive);
 }
 function renderTimeline() {
-  const tl = $('#timeline'); tl.innerHTML = ''; if (!S.plays.length) return;
+  const tl = $('#timeline'); tl.innerHTML = ''; if (!S.plays.length) { tl.innerHTML = '<div class="tl-empty">' + (S.station ? 'Nothing logged for this station in the last four hours.' : 'Pick a station to see its last four hours: songs as blocks, ad breaks as gaps.') + '</div>'; return; }
   const end = Date.now(), start = end - WINDOW_MS, W = tl.clientWidth || 800, px = t => (t - start) / WINDOW_MS * W;
   const col = S.station ? S.station.col : '#c8ff3d';
   for (let h = Math.ceil(start / 3600e3) * 3600e3; h < end; h += 3600e3) { const d = document.createElement('div'); d.className = 'tl-hour'; d.style.left = px(h) + 'px'; d.dataset.t = fmtTime(h); tl.appendChild(d); }
@@ -203,7 +203,7 @@ function renderTimeline() {
   $('#tl-stats').textContent = `${songs} songs · ${breaks} break${breaks === 1 ? '' : 's'} skipped`;
 }
 function renderQueue() {
-  const ol = $('#queue'); ol.innerHTML = '';
+  const ol = $('#queue'); ol.innerHTML = ''; if (!S.plays.length) { ol.innerHTML = '<li class="q-empty">Nothing yet.</li>'; return; }
   [...S.plays].reverse().slice(0, 24).forEach(p => {
     const li = document.createElement('li'); li.className = (S.cur && S.cur.id === p.id ? 'cur' : '') + (S.played.has(p.id) ? ' played' : '') + (S.badVideos.has(p.y) ? ' bad' : '');
     li.innerHTML = `<span class="q-time"></span><img alt=""><div><div class="q-t"></div><div class="q-a"></div></div>`;
