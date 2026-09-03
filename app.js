@@ -264,7 +264,16 @@ function stepLabels() { $('#btn-back').textContent = `−${S.step}s`; $('#btn-fw
 $('#step').value = String(S.step); $('#step').onchange = e => { S.step = +e.target.value; save(); stepLabels(); toast(`Jumps are now ${S.step} seconds`); }; stepLabels();
 function toggleFs() { const v = $('#video'); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (v.requestFullscreen) v.requestFullscreen().catch(() => {}); }
 $('#btn-fs').onclick = toggleFs; $('#video').addEventListener('dblclick', e => { if (!document.body.classList.contains('saver')) toggleFs(); });
-document.addEventListener('fullscreenchange', () => { document.body.classList.toggle('fs', !!document.fullscreenElement && !document.body.classList.contains('saver')); $('#btn-fs').textContent = document.fullscreenElement ? '⤢' : '⛶'; });
+document.addEventListener('fullscreenchange', () => { document.body.classList.toggle('fs', !!document.fullscreenElement && !document.body.classList.contains('saver')); $('#btn-fs').classList.toggle('on', !!document.fullscreenElement); });
+
+/* ---------- install as an app ---------- */
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; $('#btn-install').hidden = false; });
+window.addEventListener('appinstalled', () => { $('#btn-install').hidden = true; toast('Installed – find Offair on your home screen'); });
+$('#btn-install').onclick = async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; $('#btn-install').hidden = true; };
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream, standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (isIOS && !standalone) { $('#btn-install').hidden = false; $('#btn-install').onclick = () => toast('On iPhone: tap the Share button, then “Add to Home Screen”.', 5000); }
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 $('#vol').value = S.vol; $('#vol').oninput = e => { S.vol = +e.target.value; S.muted = S.vol === 0; save(); if (S.ready) { player.setVolume(S.vol); S.muted ? player.mute() : player.unMute(); } $('#btn-mute').textContent = S.muted ? '🔇' : '🔊'; };
 $('#btn-mute').textContent = S.muted ? '🔇' : '🔊';
 $('#btn-mute').onclick = () => { S.muted = !S.muted; save(); if (S.ready) S.muted ? player.mute() : player.unMute(); $('#btn-mute').textContent = S.muted ? '🔇' : '🔊'; };
